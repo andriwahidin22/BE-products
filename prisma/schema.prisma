@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  staff
+  support
+}
+
+enum ProductStatus {
+  active
+  inactive
+  deleted
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions  Session[]
+  logs      Log[]
+  products  Product[]
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  token        String   @unique
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastActivity DateTime @updatedAt
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  Int?
+  data      Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  category    String
+  price       Int
+  features    String[]
+  image       String
+  status      ProductStatus @default(active)
+  createdBy   Int
+  creator     User          @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
