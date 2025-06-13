@@ -1,6 +1,6 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthenticatedRequest } from '../../middleware/AuthMiddleware';
+import { Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import { AuthenticatedRequest } from "../../middleware/AuthMiddleware";
 
 const prisma = new PrismaClient();
 
@@ -12,7 +12,7 @@ class ProductController {
       const limitNumber = parseInt(limit as string);
       const skip = (pageNumber - 1) * limitNumber;
 
-      const whereClause: any = { status: 'active' };
+      const whereClause: any = { status: "active" };
       if (category) {
         whereClause.category = category as string;
       }
@@ -36,8 +36,10 @@ class ProductController {
         },
       });
     } catch (error) {
-      console.error('Get products error:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+      console.error("Get products error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -45,20 +47,34 @@ class ProductController {
     try {
       // Pastikan req.user ada
       if (!req.user) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
+        return res
+          .status(401)
+          .json({ success: false, message: "Unauthorized" });
       }
 
       const { name, description, category, price, features, image } = req.body;
 
+      const file = req.file;
+      if (!file) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Image is required" });
+      }
+
+      const imagePath = `/uploads/${file.filename}`;
+
+      // Simpan imagePath ke database
       const product = await prisma.product.create({
         data: {
           name,
           description,
           category,
-          price,
+          price: parseInt(price),
           features,
-          image,
-          createdBy: req.user.id,
+          image: imagePath,
+          creator: {
+            connect: { id: req.user.id },
+          },
         },
       });
 
@@ -67,8 +83,10 @@ class ProductController {
         product,
       });
     } catch (error) {
-      console.error('Create product error:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+      console.error("Create product error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -76,7 +94,9 @@ class ProductController {
     try {
       // Pastikan req.user ada
       if (!req.user) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
+        return res
+          .status(401)
+          .json({ success: false, message: "Unauthorized" });
       }
 
       const { id } = req.params;
@@ -92,8 +112,10 @@ class ProductController {
         product,
       });
     } catch (error) {
-      console.error('Update product error:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+      console.error("Update product error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 
@@ -101,7 +123,9 @@ class ProductController {
     try {
       // Pastikan req.user ada
       if (!req.user) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
+        return res
+          .status(401)
+          .json({ success: false, message: "Unauthorized" });
       }
 
       const { id } = req.params;
@@ -109,16 +133,18 @@ class ProductController {
       // Soft delete (update status)
       await prisma.product.update({
         where: { id: parseInt(id) },
-        data: { status: 'deleted' },
+        data: { status: "deleted" },
       });
 
       res.json({
         success: true,
-        message: 'Product deleted successfully',
+        message: "Product deleted successfully",
       });
     } catch (error) {
-      console.error('Delete product error:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+      console.error("Delete product error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error" });
     }
   }
 }
