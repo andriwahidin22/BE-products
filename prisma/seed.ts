@@ -1,34 +1,41 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { PrismaClient, Role } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash('admin123', salt);
+  const hashedPassword = await bcrypt.hash("admin123", 10);
 
-  // Create admin user
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@cyberguard.com' },
+  await prisma.user.upsert({
+    where: { username: "admin" },
     update: {},
     create: {
-      email: 'admin@cyberguard.com',
+      username: "admin",
       password: hashedPassword,
-      name: 'Admin CyberGuard',
-      role: 'admin',
-      avatar: 'https://api.cyberguard.com/uploads/avatars/admin.jpg'
-    }
+      name: "Administrator",
+      role: Role.ADMIN,
+    },
   });
 
-  console.log('Admin user created:', adminUser);
+  await prisma.user.upsert({
+    where: { username: "boss" },
+    update: {},
+    create: {
+      username: "boss",
+      password: await bcrypt.hash("boss123", 10),
+      name: "Boss",
+      role: Role.BOSS,
+    },
+  });
+
+  console.log("✅ Admin and Boss users created!");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seed error:", e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    prisma.$disconnect();
   });

@@ -1,13 +1,11 @@
-import { Router } from 'express'
-import authRoutes from './auth/AuthRoute'
-import productRoutes from './master/ProductRoute'
+import { Router } from "express";
+import authRoutes from "./auth/index.routes";
+import employeeRoutes from "./master/employee/index.routes";
+// import masterRoutes from "./master/index.routes"; // Nanti setelah kita buat
 
-const router = Router()
+const router = Router();
 
-// Auth routes
-router.use('/auth', authRoutes)
+router.use("/auth", authRoutes);
+router.use("/employees", employeeRoutes);
 
-// Product routes
-router.use('/products', productRoutes)
-
-export default router
+export default router;
